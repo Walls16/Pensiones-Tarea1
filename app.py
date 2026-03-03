@@ -2,17 +2,11 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-
+import matplotlib.pyplot as plt
 from core.calculations import (
     calcular_contribuciones,
 )
-
 from core.pdf_generator import generar_pdf_contribuciones
-from core.lss73 import (
-    calcular_pension_lss73,
-    encontrar_semanas_para_tasa_objetivo,
-    generar_curva_tasa_vs_semanas
-)
 
 # -------------------------
 # Configuración general
@@ -28,16 +22,13 @@ st.markdown("Simulación de contribuciones")
 # -------------------------
 # Tabs
 # -------------------------
-tab1, tab2, tab3, tab4 = st.tabs([
+tab1, tab2, tab3 = st.tabs([
     "Simulación individual",
     "Análisis por nivel de ingreso",
-    "Régimen 1973 (Pensión)",
     "Metodología"
 ])
 
 # ======================================================
-# TAB 1 — SIMULACIÓN INDIVIDUAL
-# ======================================================# ======================================================
 # TAB 1 — SIMULACIÓN INDIVIDUAL
 # ======================================================
 with tab1:
@@ -84,9 +75,9 @@ with tab1:
 
     salario = st.number_input(
         "Salario Base de Cotización mensual (SBC)",
-        min_value=0.0,
+        min_value=4000.0,
         step=100.0,
-        format="%.2f"
+        format="%.2f",
     )
 
     if salario > 0:
@@ -123,7 +114,7 @@ with tab1:
         # PATRÓN
         # ======================
         with col2:
-            st.subheader("🏢 Patrón")
+            st.subheader("Patrón")
 
             for k, v in patron.items():
                 st.write(f"{k}: ${v['monto']:,.2f}")
@@ -136,7 +127,7 @@ with tab1:
         # GOBIERNO
         # ======================
         with col3:
-            st.subheader("🏛️ Gobierno")
+            st.subheader("Gobierno")
 
             for k, v in gobierno.items():
                 st.write(f"{k}: ${v['monto']:,.2f}")
@@ -149,7 +140,7 @@ with tab1:
         # GRÁFICA
         # ======================
         st.divider()
-        st.subheader("📈 Distribución")
+        st.subheader("Distribución")
 
         fig = plot_contribuciones_plotly(contribuciones)
         st.plotly_chart(fig, use_container_width=True)
@@ -178,18 +169,15 @@ with tab1:
 # ======================================================
 # TAB 2 — ANÁLISIS POR NIVEL DE INGRESO
 # ======================================================
-# ======================================================
-# TAB 2 — ANÁLISIS POR NIVEL DE INGRESO
-# ======================================================
 with tab2:
 
-    st.subheader("📈 Contribuciones efectivas por nivel de ingreso")
+    st.subheader("Contribuciones efectivas por nivel de ingreso")
 
     if salario <= 0:
         st.info("Primero ingresa un salario válido en la pestaña de simulación.")
     else:
 
-        salarios = list(range(5_000, 100_001, 500))
+        salarios = list(range(3_500, 100_001, 500))
         data = []
 
         for s in salarios:
@@ -247,40 +235,10 @@ with tab2:
         st.plotly_chart(fig, use_container_width=True)
 
 # ======================================================
-# TAB 3 — RÉGIMEN 1973
+# TAB 3 — METODOLOGÍA
 # ======================================================
 with tab3:
-
-    st.subheader("Cálculo de Pensión — LSS 1973")
-
-    salario_diario = st.number_input("Salario diario", min_value=0.0, step=10.0)
-    salario_minimo_diario = st.number_input("Salario mínimo diario", value=248.93)
-    edad = st.slider("Edad", 60, 65, 65)
-    semanas = st.number_input("Semanas cotizadas", min_value=500, step=50)
-    conyuge = st.checkbox("¿Tiene cónyuge?")
-
-    if salario_diario > 0:
-
-        resultado = calcular_pension_lss73(
-            salario_diario,
-            salario_minimo_diario,
-            edad,
-            semanas,
-            conyuge
-        )
-
-        st.metric("Pensión mensual estimada", f"${resultado['pension_mensual']:,.2f}")
-        st.metric("Tasa de reemplazo", f"{resultado['tasa_reemplazo_pct']:.2f}%")
-
-# ======================================================
-# TAB 4 — METODOLOGÍA
-# ======================================================
-with tab4:
     st.markdown("""
     ### Metodología
-
-    - LSS 1997 para contribuciones.
-    - LSS 1973 para pensión.
-    - Modelo matemático limpio sin redondeos intermedios.
-    - Resultados con fines educativos.
+    - Mediante el ingreso del salario base de cotización (SBC), se aplican las reglas de contribución para trabajador, patrón y gobierno utilizando las tasas y bases establecidas por la ley.
     """)
